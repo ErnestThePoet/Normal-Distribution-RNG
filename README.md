@@ -5,8 +5,8 @@ A lightweight normal distribution random number generator(RNG) based on Box-Mull
 
 ### Quality&Performance
 We implemented a simple LCG at the bottom to directly generate uniform distributed floats.
-The normal distribution RNG passed the Kolmogorov-Smirnov test with α=0.01. During the test, the value of max{abs(Fobs(xi)-Fexp(xi))} was almost the same as that of numpy.
-For performance, the bare `Floats` is a bit slower than numpy, i.e. about 1.45 times slower. But as we use `FloatsSSE`, the speed will boost to about 3 times higher than numpy. If we continue with `FloatsAVX`, it can be 7x faster than numpy! Howerer, as numpy generates `np.float64`, our comparison is quite unfair. **So this RNG should only be used on occasions where you just want speed and don't need doubles.**
+- The normal distribution RNG passed the Kolmogorov-Smirnov test with α=0.01. During the test, the value of max{abs(Fobs(xi)-Fexp(xi))} was almost the same as that of numpy.
+- For performance, the bare `Floats` is a bit slower than numpy, i.e. about 1.45 times slower. But as we use `FloatsSSE`, the speed will boost to about 3 times higher than numpy. If we continue with `FloatsAVX`, it can be 7x faster than numpy! Howerer, as numpy generates `np.float64`, our comparison is quite unfair. **So this RNG should only be used on occasions where you just want speed and don't need doubles.**
 
 ### List of exported functions
 
