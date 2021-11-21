@@ -8,14 +8,11 @@
 #include <cstdint>
 #include <memory>
 #include <array>
-#include <random>
+
+#include "float_lcg.h"
 
 #define TWO_PI 6.28318530717958647692f	
 
-#define M256_32BIT_CONST_TYPE_ALIGNED(Name,Type,Val) \
-	static constexpr __declspec(align(32)) Type Name[8]={Val,Val,Val,Val,Val,Val,Val,Val}
-
-using std::mt19937;
 using std::array;
 using std::unique_ptr;
 using std::make_unique;
@@ -29,56 +26,8 @@ private:
 
 	float* generated_floats_ = nullptr;
 
-	static constexpr size_t vector_size_ = 8;
-
-	static constexpr uint32_t lcg32_a_ = 1664525;
-	static constexpr uint32_t lcg32_b_ = 1013904223;
-	static constexpr uint32_t float_exp0_mask_ = 0x3F800000;
-
-	M256_32BIT_CONST_TYPE_ALIGNED(packed_lcg32_a_, uint32_t, lcg32_a_);
-	M256_32BIT_CONST_TYPE_ALIGNED(packed_lcg32_b_, uint32_t, lcg32_b_);
-
-	M256_32BIT_CONST_TYPE_ALIGNED(packed_float_exp0_mask_, uint32_t, float_exp0_mask_);
-
-	M256_32BIT_CONST_TYPE_ALIGNED(packed_1f_, float, 1.0f);
-	M256_32BIT_CONST_TYPE_ALIGNED(packed_2pi_, float, TWO_PI);
-
-	uint32_t previous_lcg_ui32_;
-
-	float GetNextLCGFloat_()
-	{
-		previous_lcg_ui32_ = previous_lcg_ui32_ * lcg32_a_ + lcg32_b_;
-		union
-		{
-			uint32_t ui;
-			float f;
-		} u;
-		u.ui = (previous_lcg_ui32_ >> 9) | float_exp0_mask_;
-		return u.f - 1.0f;
-	}
-
-	__m256i packed_previous_lcg_ui32_;
-
-	__m256 GetNextLCGPack_()
-	{
-		// 对整数向量完成一次线性同余迭代
-		packed_previous_lcg_ui32_ = _mm256_add_epi32(
-			_mm256_mullo_epi32(packed_previous_lcg_ui32_, *(__m256i*)packed_lcg32_a_),
-			*(__m256i*)packed_lcg32_b_);
-		
-		// 将整数向量的位模式转换为能产生[1.0,2.0)之间的浮点数位模式
-		// 首先右移清空符号位和指数位，然后使用掩码将指数位置127
-		__m256i float_bit_ready_i32s = _mm256_or_epi32(
-			_mm256_srli_epi32(packed_previous_lcg_ui32_, 9),
-			*(__m256i*) packed_float_exp0_mask_);
-
-		// 转换为float向量，减去1.0并返回
-		__m256 result = _mm256_sub_ps(
-			_mm256_castsi256_ps(float_bit_ready_i32s), 
-			*(__m256*) packed_1f_);
-
-		return result;
-	}
+	// 提前创建好生成float的LCG的实例，防止频繁调用NextFloat()时反复创建对象影响性能
+	FloatLCG<float> float_lcg_float_;
 
 public:
 	/************************************************
@@ -91,22 +40,7 @@ public:
 		float sigma_square) :
 		mu_(mu),
 		sigma_square_(sigma_square)
-	{
-		mt19937 initial_ui32_generator(time(nullptr));
-
-		previous_lcg_ui32_ = initial_ui32_generator();
-
-		packed_previous_lcg_ui32_ = _mm256_set_epi32(
-			initial_ui32_generator(),
-			initial_ui32_generator(),
-			initial_ui32_generator(),
-			initial_ui32_generator(),
-			initial_ui32_generator(),
-			initial_ui32_generator(),
-			initial_ui32_generator(),
-			initial_ui32_generator()
-		);
-	}
+	{}
 
 	~NormalDistributionRNG()
 	{
@@ -132,17 +66,26 @@ public:
 	float* Floats(unsigned int count);
 
 	/************************************************
-	* 成员函数 FloatsAVX2
-	* 使用AVX2指令集进行并行优化的Floats函数。
+	* 成员函数 FloatsSSE
+	* 使用SSE指令集进行并行优化的Floats函数。
 	* 参数count: 要生成的随机数数量。
+	* 【注意】需要CPU支持SSE, SSE2, SSE4.1指令集
 	*************************************************/
-	float* FloatsAVX2(unsigned int count);
+	float* FloatsSSE(unsigned int count);
+
+	/************************************************
+	* 成员函数 FloatsAVX
+	* 使用AVX指令集进行并行优化的Floats函数。
+	* 参数count: 要生成的随机数数量。
+	* 【注意】需要CPU支持AVX, AVX2指令集
+	*************************************************/
+	float* FloatsAVX(unsigned int count);
 };
 
 float NormalDistributionRNG::NextFloat()
 {
-	return sqrtf(-2 * sigma_square_ * logf(GetNextLCGFloat_()))
-		* cosf(TWO_PI * GetNextLCGFloat_()) + mu_;
+	return sqrtf(-2 * sigma_square_ * logf(float_lcg_float_.GetNext()))
+		* cosf(TWO_PI * float_lcg_float_.GetNext()) + mu_;
 }
 
 float* NormalDistributionRNG::Floats(unsigned int count)
@@ -157,14 +100,14 @@ float* NormalDistributionRNG::Floats(unsigned int count)
 	for (unsigned int i = 0; i < count; i++)
 	{
 		generated_floats_[i] = 
-			sqrtf(-2 * sigma_square_ * logf(GetNextLCGFloat_()))
-			* cosf(TWO_PI * GetNextLCGFloat_()) + mu_;
+			sqrtf(-2 * sigma_square_ * logf(float_lcg_float_.GetNext()))
+			* cosf(TWO_PI * float_lcg_float_.GetNext()) + mu_;
 	}
 
 	return generated_floats_;
 }
 
-float* NormalDistributionRNG::FloatsAVX2(unsigned int count)
+float* NormalDistributionRNG::FloatsSSE(unsigned int count)
 {
 	if (generated_floats_)
 	{
@@ -173,44 +116,108 @@ float* NormalDistributionRNG::FloatsAVX2(unsigned int count)
 
 	generated_floats_ = new float[count];
 
+	constexpr size_t vector_size = 4;
+
+	FloatLCG<__m128> float_lcg_packed;
+
+	__m128 packed_m2_sigma_square = _mm_set1_ps(-2 * sigma_square_);
+	__m128 packed_mu = _mm_set1_ps(mu_);
+
+	M128_32BIT_CONST_TYPE_ALIGNED(packed_2pi, float, TWO_PI);
+
+	for (unsigned int i = 0; i < count / vector_size; i++)
+	{
+		__m128 result = _mm_sqrt_ps(_mm_mul_ps(
+			_mm_log_ps(float_lcg_packed.GetNext()),
+			packed_m2_sigma_square));
+
+		result = _mm_mul_ps(
+			_mm_cos_ps(_mm_mul_ps(
+				*(__m128*)packed_2pi,
+				float_lcg_packed.GetNext())),
+			result);
+
+		_mm_store_ps(generated_floats_ + vector_size * i,
+			_mm_add_ps(result, packed_mu));
+	}
+
+	__m128 remaining_result = _mm_sqrt_ps(_mm_mul_ps(
+		_mm_log_ps(float_lcg_packed.GetNext()),
+		packed_m2_sigma_square));
+
+	remaining_result = _mm_mul_ps(
+		_mm_cos_ps(_mm_mul_ps(
+			*(__m128*)packed_2pi,
+			float_lcg_packed.GetNext())),
+		remaining_result);
+
+	array<float, vector_size> remaining_results_array{ 0 };
+	_mm_store_ps(remaining_results_array.data(), remaining_result);
+
+	for (unsigned int i = vector_size * (count / vector_size);
+		i < count;
+		i++)
+	{
+		generated_floats_[i] =
+			remaining_results_array[i - vector_size * (count / vector_size)];
+	}
+
+	return generated_floats_;
+}
+
+float* NormalDistributionRNG::FloatsAVX(unsigned int count)
+{
+	if (generated_floats_)
+	{
+		delete[] generated_floats_;
+	}
+
+	generated_floats_ = new float[count];
+
+	constexpr size_t vector_size = 8;
+
+	FloatLCG<__m256> float_lcg_packed;
+
 	__m256 packed_m2_sigma_square = _mm256_set1_ps(-2 * sigma_square_);
 	__m256 packed_mu = _mm256_set1_ps(mu_);
 
-	for (unsigned int i = 0; i < count / vector_size_; i++)
+	M256_32BIT_CONST_TYPE_ALIGNED(packed_2pi, float, TWO_PI);
+
+	for (unsigned int i = 0; i < count / vector_size; i++)
 	{
 		__m256 result = _mm256_sqrt_ps(_mm256_mul_ps(
-			_mm256_log_ps(GetNextLCGPack_()),
+			_mm256_log_ps(float_lcg_packed.GetNext()),
 			packed_m2_sigma_square));
 
 		result = _mm256_mul_ps(
 			_mm256_cos_ps(_mm256_mul_ps(
-				*(__m256*)packed_2pi_,
-				GetNextLCGPack_())),
+				*(__m256*)packed_2pi,
+				float_lcg_packed.GetNext())),
 			result);
 
-		_mm256_store_ps(generated_floats_ + vector_size_ * i,
+		_mm256_store_ps(generated_floats_ + vector_size * i,
 			_mm256_add_ps(result, packed_mu));
 	}
 
 	__m256 remaining_result = _mm256_sqrt_ps(_mm256_mul_ps(
-		_mm256_log_ps(GetNextLCGPack_()),
+		_mm256_log_ps(float_lcg_packed.GetNext()),
 		packed_m2_sigma_square));
 
 	remaining_result = _mm256_mul_ps(
 		_mm256_cos_ps(_mm256_mul_ps(
-			*(__m256*)packed_2pi_,
-			GetNextLCGPack_())),
+			*(__m256*)packed_2pi,
+			float_lcg_packed.GetNext())),
 		remaining_result);
 
-	array<float, vector_size_> remaining_results_array{ 0 };
+	array<float, vector_size> remaining_results_array{ 0 };
 	_mm256_store_ps(remaining_results_array.data(), remaining_result);
 
-	for (unsigned int i = vector_size_ * (count / vector_size_);
+	for (unsigned int i = vector_size * (count / vector_size);
 		i < count;
 		i++)
 	{
 		generated_floats_[i] = 
-			remaining_results_array[i - vector_size_ * (count / vector_size_)];
+			remaining_results_array[i - vector_size * (count / vector_size)];
 	}
 
 	return generated_floats_;
@@ -232,6 +239,7 @@ BOOL APIENTRY DllMain(HMODULE hModule,
 	return TRUE;
 }
 
+// 管理正态随机数生成器的实例
 unique_ptr<NormalDistributionRNG> kRNG = nullptr;
 
 // 以下均为Dll导出函数
@@ -250,7 +258,7 @@ float ExportNextFloat()
 	}
 	else
 	{
-		return 0.0f;
+		return nanf("RNG Uninitialized");
 	}
 }
 
@@ -266,11 +274,23 @@ float* ExportFloats(unsigned int count)
 	}
 }
 
-float* ExportFloatsAVX2(unsigned int count)
+float* ExportFloatsSSE(unsigned int count)
 {
 	if (kRNG)
 	{
-		return kRNG->FloatsAVX2(count);
+		return kRNG->FloatsSSE(count);
+	}
+	else
+	{
+		return nullptr;
+	}
+}
+
+float* ExportFloatsAVX(unsigned int count)
+{
+	if (kRNG)
+	{
+		return kRNG->FloatsAVX(count);
 	}
 	else
 	{
