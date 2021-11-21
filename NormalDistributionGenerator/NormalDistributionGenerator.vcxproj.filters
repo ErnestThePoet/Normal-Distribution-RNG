@@ -24,12 +24,18 @@
     <ClInclude Include="float_lcg.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="nd_rng.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="dllmain.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="pch.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="nd_rng.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
