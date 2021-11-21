@@ -4,22 +4,6 @@ import numpy as np
 import scipy.stats as sps
 from matplotlib import pyplot as pypl
 
-x_data = [1000000, 10000000, 100000000]
-t_numpy = [13.963, 136.635, 1358.368]
-t_bm = [19.91, 201.461, 1978.71]
-t_bm_sse = [4.025, 45.91, 452.791]
-t_bm_avx = [1.995, 19.948, 208.443]
-
-pypl.plot(x_data, t_numpy, label="numpy")
-pypl.plot(x_data, t_bm, label="Box-Muller")
-pypl.plot(x_data, t_bm_sse, label="Box-Muller(SSE)")
-pypl.plot(x_data, t_bm_avx, label="Box-Muller(AVX)")
-pypl.xlabel("Count")
-pypl.ylabel("Time/ms")
-pypl.legend()
-pypl.grid()
-pypl.show()
-exit(0)
 
 # =========================测试数据设置=========================
 # 正态分布均值
@@ -35,7 +19,7 @@ BUCKET_SIZE = 2
 BUCKET_COUNT = 50
 
 # 耗时测试中生成随机数的数量
-TIMING_TEST_TOTAL_COUNT = 100000000
+TIMING_TEST_TOTAL_COUNT = 100000
 # ============================================================
 
 
@@ -149,7 +133,7 @@ for i in range(0, TOTAL_COUNT):
 bm_bucket_data = get_bucket_count_data(bm_result)
 
 # 使用以SSE指令集优化的函数生成一组正态随机数
-# 【警告】若CPU不支持SSE指令集，则程序将发生错误
+# 【警告】若CPU不支持SSE, SSE2, SSE4.1指令集之一，则程序将发生错误
 _bm_sse_result_ptr = bm_module.FloatsSSE(c_uint(TOTAL_COUNT))
 bm_sse_result = [0] * TOTAL_COUNT
 for i in range(0, TOTAL_COUNT):
@@ -157,7 +141,7 @@ for i in range(0, TOTAL_COUNT):
 bm_sse_bucket_data = get_bucket_count_data(bm_sse_result)
 
 # 使用以AVX指令集优化的函数生成一组正态随机数
-# 【警告】若CPU不支持AVX指令集，则程序将发生错误
+# 【警告】若CPU不支持AVX, AVX2指令集之一，则程序将发生错误
 _bm_avx_result_ptr = bm_module.FloatsAVX(c_uint(TOTAL_COUNT))
 bm_avx_result = [0] * TOTAL_COUNT
 for i in range(0, TOTAL_COUNT):
@@ -167,17 +151,17 @@ bm_avx_bucket_data = get_bucket_count_data(bm_avx_result)
 
 # =========================测试结果分析=========================
 # 进行Kolmogorov-Smirnov检验
-# kolmogorov(np_result, "numpy")
-# kolmogorov(bm_result, "Box-Muller算法")
+kolmogorov(np_result, "numpy")
+kolmogorov(bm_result, "Box-Muller算法")
 
 # 在同一张图中展示numpy和Box-Muller算法分桶统计结果
-# pypl.bar(*bm_bucket_data, label="Box-Muller", color="darkorange")
-# pypl.plot(*np_bucket_data, label="numpy", color="orangered")
-# pypl.xlabel("x")
-# pypl.ylabel("Freq")
-# pypl.legend()
-# pypl.grid()
-# pypl.show()
+pypl.bar(*bm_bucket_data, label="Box-Muller", color="darkorange")
+pypl.plot(*np_bucket_data, label="numpy", color="orangered")
+pypl.xlabel("x")
+pypl.ylabel("Freq")
+pypl.legend()
+pypl.grid()
+pypl.show()
 
 # 与正态分布的分布函数(理论值)进行残差平方和分析
 # analyse_accuracy(np_bucket_data[1])
@@ -223,3 +207,20 @@ print(f"Box-Muller算法(AVX优化)耗时(生成{TIMING_TEST_TOTAL_COUNT}个数)
       f"：{round(bm_avx_time / 1000 / 1000, 3)} ms "
       f"速率提升倍数{round(bm_time / bm_avx_time, 3)}")
 # ============================================================
+
+# x_data = [1000000, 10000000, 100000000]
+# t_numpy = [13.963, 136.635, 1358.368]
+# t_bm = [19.91, 201.461, 1978.71]
+# t_bm_sse = [4.025, 45.91, 452.791]
+# t_bm_avx = [1.995, 19.948, 208.443]
+#
+# pypl.plot(x_data, t_numpy, label="numpy")
+# pypl.plot(x_data, t_bm, label="Box-Muller")
+# pypl.plot(x_data, t_bm_sse, label="Box-Muller(SSE)")
+# pypl.plot(x_data, t_bm_avx, label="Box-Muller(AVX)")
+# pypl.xlabel("Count")
+# pypl.ylabel("Time/ms")
+# pypl.legend()
+# pypl.grid()
+# pypl.show()
+# exit(0)
