@@ -24,9 +24,7 @@ After loading the DLL library, call
 Then, call the following functions based on your need:
 - `NextFloat()`: Get next normal distributed float.
 - `Floats(unsigned int count)`: Generate `count` normal distributed floats in an array, and return a pointer to the first element.
-- `FloatsSSE(unsigned int count)`: SSE accelerated `Floats` (~4x faster).  
-- **NOTE: SSE, SSE2, SSE4.1 intrinsics MUST be supported by your CPU, or your program may crash.**
-- `FloatsAVX(unsigned int count)`: AVX+AVX2 accelerated `Floats` (~8x faster).  
-- **NOTE: AVX and AVX2 intrinsics MUST be supported by your CPU, or your program may crash.**
+- `FloatsSSE(unsigned int count)`: SSE accelerated `Floats` (~4x faster). **NOTE: SSE, SSE2, SSE4.1 intrinsics MUST be supported by your CPU, or your program may crash.**
+- `FloatsAVX(unsigned int count)`: AVX+AVX2 accelerated `Floats` (~8x faster). **NOTE: AVX and AVX2 intrinsics MUST be supported by your CPU, or your program may crash.**
 
 # Happy Coding!
