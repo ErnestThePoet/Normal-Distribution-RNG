@@ -224,3 +224,23 @@ print(f"Box-Muller算法(AVX优化)耗时(生成{TIMING_TEST_TOTAL_COUNT}个数)
 # pypl.grid()
 # pypl.show()
 # exit(0)
+
+# x_numpy=[-2]
+# x_bm=[-1]
+# x_bm_sse=[0]
+# x_bm_avx=[1]
+# t_numpy = [136.635]
+# t_bm = [201.461]
+# t_bm_sse = [45.91]
+# t_bm_avx = [19.948]
+#
+# pypl.bar(x_numpy, t_numpy, label="numpy")
+# pypl.bar(x_bm, t_bm, label="Box-Muller")
+# pypl.bar(x_bm_sse, t_bm_sse, label="Box-Muller(SSE)")
+# pypl.bar(x_bm_avx, t_bm_avx, label="Box-Muller(AVX)")
+# pypl.xlabel("Method")
+# pypl.xticks([])
+# pypl.ylabel("Time/ms")
+# pypl.legend()
+# pypl.show()
+# exit(0)

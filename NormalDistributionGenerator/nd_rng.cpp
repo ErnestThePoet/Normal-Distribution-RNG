@@ -27,6 +27,11 @@ float* NormalDistributionRNG::Floats(unsigned int count)
 
 	generated_floats_ = new float[count];
 
+	if (!generated_floats_)
+	{
+		return nullptr;
+	}
+
 	for (unsigned int i = 0; i < count; i++)
 	{
 		generated_floats_[i] =
@@ -45,6 +50,11 @@ float* NormalDistributionRNG::FloatsSSE(unsigned int count)
 	}
 
 	generated_floats_ = new float[count];
+
+	if (!generated_floats_)
+	{
+		return nullptr;
+	}
 
 	constexpr size_t vector_size = 4;
 
@@ -103,6 +113,11 @@ float* NormalDistributionRNG::FloatsAVX(unsigned int count)
 	}
 
 	generated_floats_ = new float[count];
+
+	if (!generated_floats_)
+	{
+		return nullptr;
+	}
 
 	constexpr size_t vector_size = 8;
 
