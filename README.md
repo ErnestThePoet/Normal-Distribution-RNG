@@ -1,7 +1,7 @@
 # Normal-Distribution-Random-Number-Generator
 
 ### Description
-A lightweight normal distribution random number generator(RNG) based on Box-Muller method, with SSE and AVX2 accelerated versions.
+A fast, lightweight normal distribution random number generator(RNG) based on Box-Muller method, with SSE and AVX2 accelerated versions.
 
 ### Quality&Performance
 We implemented a simple LCG at the bottom to directly generate uniform distributed floats.
