@@ -28,13 +28,13 @@ Then, call the following functions based on your need:
 - `FloatsAVX2(unsigned int count)`: AVX+AVX2 accelerated `Floats` (~8x faster). *** **NOTE: AVX and AVX2 intrinsics MUST be supported by your CPU, or your program will crash.** ***
 
 ### Analysis figures
-1) Fobs and Fexp figure in K-S test
+1) Fobs and Fexp figure in K-S test (μ=-3, σ²=9, count=100000):
 <image src="https://github.com/ErnestThePoet/Normal-Distribution-Random-Number-Generator/blob/master/fig1.png" height="350"/>
 
-2) Random number distribution histogram (v.s. numpy)
+2) Random number distribution histogram (v.s. numpy, μ=10, σ²=20, count=100000)
 <image src="https://github.com/ErnestThePoet/Normal-Distribution-Random-Number-Generator/blob/master/fig2.png" height="350"/>
 
-3) Performance benchmark
+3) Performance benchmark (count=10000000, i7-8565U)
 <image src="https://github.com/ErnestThePoet/Normal-Distribution-Random-Number-Generator/blob/master/fig3.png" height="350"/>
 
 # Happy Coding!
