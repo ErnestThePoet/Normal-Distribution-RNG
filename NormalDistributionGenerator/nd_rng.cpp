@@ -105,7 +105,7 @@ float* NormalDistributionRNG::FloatsSSE(unsigned int count)
 	return generated_floats_;
 }
 
-float* NormalDistributionRNG::FloatsAVX(unsigned int count)
+float* NormalDistributionRNG::FloatsAVX2(unsigned int count)
 {
 	if (generated_floats_)
 	{

@@ -72,11 +72,11 @@ float* ExportFloatsSSE(unsigned int count)
 	}
 }
 
-float* ExportFloatsAVX(unsigned int count)
+float* ExportFloatsAVX2(unsigned int count)
 {
 	if (kRNG)
 	{
-		return kRNG->FloatsAVX(count);
+		return kRNG->FloatsAVX2(count);
 	}
 	else
 	{

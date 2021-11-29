@@ -4,4 +4,4 @@ CreateGenerator=ExportCreateGenerator
 NextFloat=ExportNextFloat
 Floats=ExportFloats
 FloatsSSE=ExportFloatsSSE
-FloatsAVX=ExportFloatsAVX
+FloatsAVX2=ExportFloatsAVX2

@@ -4,7 +4,6 @@ import numpy as np
 import scipy.stats as sps
 from matplotlib import pyplot as pypl
 
-
 # =========================测试数据设置=========================
 # 正态分布均值
 MU = 0
@@ -104,8 +103,8 @@ bm_module.Floats.argtypes = [c_uint]
 bm_module.Floats.restype = POINTER(c_float)
 bm_module.FloatsSSE.argtypes = [c_uint]
 bm_module.FloatsSSE.restype = POINTER(c_float)
-bm_module.FloatsAVX.argtypes = [c_uint]
-bm_module.FloatsAVX.restype = POINTER(c_float)
+bm_module.FloatsAVX2.argtypes = [c_uint]
+bm_module.FloatsAVX2.restype = POINTER(c_float)
 # 创建随机数生成器
 bm_module.CreateGenerator(
     c_float(MU),
@@ -140,13 +139,13 @@ for i in range(0, TOTAL_COUNT):
     bm_sse_result[i] = _bm_sse_result_ptr[i]
 bm_sse_bucket_data = get_bucket_count_data(bm_sse_result)
 
-# 使用以AVX指令集优化的函数生成一组正态随机数
+# 使用以AVX2指令集优化的函数生成一组正态随机数
 # 【警告】若CPU不支持AVX, AVX2指令集之一，则程序将发生错误
-_bm_avx_result_ptr = bm_module.FloatsAVX(c_uint(TOTAL_COUNT))
-bm_avx_result = [0] * TOTAL_COUNT
+_bm_avx2_result_ptr = bm_module.FloatsAVX2(c_uint(TOTAL_COUNT))
+bm_avx2_result = [0] * TOTAL_COUNT
 for i in range(0, TOTAL_COUNT):
-    bm_avx_result[i] = _bm_avx_result_ptr[i]
-bm_avx_bucket_data = get_bucket_count_data(bm_avx_result)
+    bm_avx2_result[i] = _bm_avx2_result_ptr[i]
+bm_avx2_bucket_data = get_bucket_count_data(bm_avx2_result)
 # ============================================================
 
 # =========================测试结果分析=========================
@@ -166,7 +165,7 @@ pypl.show()
 # 与正态分布的分布函数(理论值)进行残差平方和分析
 # analyse_accuracy(np_bucket_data[1])
 # analyse_accuracy(bm_bucket_data[1])
-# analyse_accuracy(bm_avx_bucket_data[1])
+# analyse_accuracy(bm_avx2_bucket_data[1])
 # ============================================================
 
 
@@ -198,26 +197,26 @@ print(f"Box-Muller算法(SSE优化)耗时(生成{TIMING_TEST_TOTAL_COUNT}个数)
       f"速率提升倍数{round(bm_time / bm_sse_time, 3)}")
 
 begin_time = time.time_ns()
-result = bm_module.FloatsAVX(TIMING_TEST_TOTAL_COUNT)
+result = bm_module.FloatsAVX2(TIMING_TEST_TOTAL_COUNT)
 end_time = time.time_ns()
 
-bm_avx_time = end_time - begin_time
+bm_avx2_time = end_time - begin_time
 
-print(f"Box-Muller算法(AVX优化)耗时(生成{TIMING_TEST_TOTAL_COUNT}个数)"
-      f"：{round(bm_avx_time / 1000 / 1000, 3)} ms "
-      f"速率提升倍数{round(bm_time / bm_avx_time, 3)}")
+print(f"Box-Muller算法(AVX2优化)耗时(生成{TIMING_TEST_TOTAL_COUNT}个数)"
+      f"：{round(bm_avx2_time / 1000 / 1000, 3)} ms "
+      f"速率提升倍数{round(bm_time / bm_avx2_time, 3)}")
 # ============================================================
 
 # x_data = [1000000, 10000000, 100000000]
 # t_numpy = [13.963, 136.635, 1358.368]
 # t_bm = [19.91, 201.461, 1978.71]
 # t_bm_sse = [4.025, 45.91, 452.791]
-# t_bm_avx = [1.995, 19.948, 208.443]
+# t_bm_avx2 = [1.995, 19.948, 208.443]
 #
 # pypl.plot(x_data, t_numpy, label="numpy")
 # pypl.plot(x_data, t_bm, label="Box-Muller")
 # pypl.plot(x_data, t_bm_sse, label="Box-Muller(SSE)")
-# pypl.plot(x_data, t_bm_avx, label="Box-Muller(AVX)")
+# pypl.plot(x_data, t_bm_avx2, label="Box-Muller(AVX2)")
 # pypl.xlabel("Count")
 # pypl.ylabel("Time/ms")
 # pypl.legend()
@@ -228,16 +227,16 @@ print(f"Box-Muller算法(AVX优化)耗时(生成{TIMING_TEST_TOTAL_COUNT}个数)
 # x_numpy=[-2]
 # x_bm=[-1]
 # x_bm_sse=[0]
-# x_bm_avx=[1]
+# x_bm_avx2=[1]
 # t_numpy = [136.635]
 # t_bm = [201.461]
 # t_bm_sse = [45.91]
-# t_bm_avx = [19.948]
+# t_bm_avx2 = [19.948]
 #
 # pypl.bar(x_numpy, t_numpy, label="numpy")
 # pypl.bar(x_bm, t_bm, label="Box-Muller")
 # pypl.bar(x_bm_sse, t_bm_sse, label="Box-Muller(SSE)")
-# pypl.bar(x_bm_avx, t_bm_avx, label="Box-Muller(AVX)")
+# pypl.bar(x_bm_avx2, t_bm_avx2, label="Box-Muller(AVX2)")
 # pypl.xlabel("Method")
 # pypl.xticks([])
 # pypl.ylabel("Time/ms")

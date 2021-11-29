@@ -54,15 +54,17 @@ public:
 	* 成员函数 FloatsSSE
 	* 使用SSE指令集进行并行优化的Floats函数。
 	* 参数count: 要生成的随机数数量。
-	* 【注意】需要CPU支持SSE, SSE2, SSE4.1指令集
+	* 【注意】需要CPU支持SSE, SSE2, SSE4.1指令集，
+	* 否则程序将崩溃
 	*************************************************/
 	float* FloatsSSE(unsigned int count);
 
 	/************************************************
-	* 成员函数 FloatsAVX
-	* 使用AVX指令集进行并行优化的Floats函数。
+	* 成员函数 FloatsAVX2
+	* 使用AVX+AVX2指令集进行并行优化的Floats函数。
 	* 参数count: 要生成的随机数数量。
-	* 【注意】需要CPU支持AVX, AVX2指令集
+	* 【注意】需要CPU支持AVX, AVX2指令集，
+	* 否则程序将崩溃
 	*************************************************/
-	float* FloatsAVX(unsigned int count);
+	float* FloatsAVX2(unsigned int count);
 };
