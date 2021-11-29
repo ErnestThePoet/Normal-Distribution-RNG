@@ -26,4 +26,15 @@ Then, call the following functions based on your need:
 - `Floats(unsigned int count)`: Generate `count` normal distributed floats in an array, and return a pointer to the first element. `nullptr` will be returned if you have never called `CreateGenerator` before, which also applies to the following two functions.
 - `FloatsSSE(unsigned int count)`: SSE accelerated `Floats` (~4x faster). *** **NOTE: SSE, SSE2, SSE4.1 intrinsics MUST be supported by your CPU, or your program will crash.** ***
 - `FloatsAVX2(unsigned int count)`: AVX+AVX2 accelerated `Floats` (~8x faster). *** **NOTE: AVX and AVX2 intrinsics MUST be supported by your CPU, or your program will crash.** ***
+
+### Analysis figures
+1) Fobs and Fexp figure in K-S test
+<image src="https://github.com/ErnestThePoet/Normal-Distribution-Random-Number-Generator/blob/master/fig1.png" height="350"/>
+
+2) Random number distribution histogram (v.s. numpy)
+<image src="https://github.com/ErnestThePoet/Normal-Distribution-Random-Number-Generator/blob/master/fig2.png" height="350"/>
+
+3) Performance benchmark
+<image src="https://github.com/ErnestThePoet/Normal-Distribution-Random-Number-Generator/blob/master/fig3.png" height="350"/>
+
 # Happy Coding!
